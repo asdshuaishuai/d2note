@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A0C1E"/>
+      <stop offset="55%" stop-color="#10122E"/>
+      <stop offset="100%" stop-color="#1A0F33"/>
+    </linearGradient>
+    <linearGradient id="neon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F0FF"/>
+      <stop offset="100%" stop-color="#7A5CFF"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="14" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- dark rounded background with neon rim -->
+  <rect x="64" y="64" width="896" height="896" rx="212" fill="url(#bg)"/>
+  <rect x="76" y="76" width="872" height="872" rx="200" fill="none"
+        stroke="url(#neon)" stroke-width="3" opacity="0.55"/>
+
+  <!-- faint circuit traces -->
+  <g stroke="#00F0FF" stroke-width="4" fill="none" opacity="0.28" stroke-linecap="round">
+    <path d="M 120 830 H 260 L 320 770 H 420"/>
+    <path d="M 904 830 H 800 L 740 770 H 660"/>
+    <circle cx="430" cy="770" r="9"/>
+    <circle cx="650" cy="770" r="9"/>
+    <path d="M 150 150 V 230 L 210 290"/>
+    <path d="M 874 150 V 230 L 814 290"/>
+    <circle cx="214" cy="296" r="8"/>
+    <circle cx="810" cy="296" r="8"/>
+  </g>
+
+  <!-- ears (neon outline) -->
+  <g filter="url(#glow)" stroke="url(#neon)" stroke-width="14" fill="none" stroke-linecap="round">
+    <path d="M 400 560 C 360 420 366 300 428 236 C 470 194 506 250 496 356 C 490 424 470 500 452 552"/>
+    <path d="M 624 560 C 664 420 658 300 596 236 C 554 194 518 250 528 356 C 534 424 554 500 572 552"/>
+  </g>
+
+  <!-- head (neon outline) -->
+  <g filter="url(#glow)" stroke="url(#neon)" stroke-width="14" fill="none" stroke-linecap="round">
+    <path d="M 350 610
+             C 350 730 420 806 512 806
+             C 604 806 674 730 674 610
+             C 674 520 610 470 512 470
+             C 414 470 350 520 350 610 Z"/>
+  </g>
+
+  <!-- eyes: cyber slashes -->
+  <g filter="url(#glow)" stroke="#00F0FF" stroke-width="16" stroke-linecap="round">
+    <line x1="418" y1="618" x2="474" y2="606"/>
+    <line x1="550" y1="606" x2="606" y2="618"/>
+  </g>
+
+  <!-- nose + mouth -->
+  <g filter="url(#glow)" stroke="#FF2D95" stroke-width="12" fill="none" stroke-linecap="round">
+    <path d="M 494 664 Q 512 680 530 664"/>
+    <path d="M 512 682 L 512 696 M 512 696 Q 492 712 480 700 M 512 696 Q 532 712 544 700"/>
+  </g>
+
+  <!-- whisker data-lines -->
+  <g stroke="#00F0FF" stroke-width="7" opacity="0.85" stroke-linecap="round">
+    <line x1="368" y1="660" x2="300" y2="648"/>
+    <line x1="368" y1="688" x2="302" y2="696"/>
+    <line x1="656" y1="660" x2="724" y2="648"/>
+    <line x1="656" y1="688" x2="722" y2="696"/>
+  </g>
+  <g fill="#FF2D95">
+    <circle cx="296" cy="648" r="9"/>
+    <circle cx="728" cy="648" r="9"/>
+  </g>
+</svg>

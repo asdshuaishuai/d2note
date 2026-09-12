@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>d2note — 本地智能笔记编辑器 for macOS</title>
+<meta name="description" content="d2note 是一个用 Swift + AppKit 原生编写的 macOS 轻量笔记/代码编辑器：语法高亮、本地翻译、习惯推荐、自动保存草稿。">
+<style>
+  :root {
+    --bg: #0a0c1e;
+    --bg2: #10122e;
+    --card: #161936;
+    --cyan: #00f0ff;
+    --purple: #7a5cff;
+    --pink: #ff2d95;
+    --text: #dfe3f5;
+    --dim: #8b91b5;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+  /* glow bg */
+  .glow-bg {
+    position: fixed; inset: 0; z-index: -1;
+    background:
+      radial-gradient(600px 400px at 15% 10%, rgba(0,240,255,.08), transparent),
+      radial-gradient(700px 500px at 85% 25%, rgba(122,92,255,.10), transparent),
+      radial-gradient(500px 400px at 50% 90%, rgba(255,45,149,.05), transparent),
+      var(--bg);
+  }
+
+  nav { padding: 22px 0; }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 20px; letter-spacing: .5px; }
+  .logo img { width: 34px; height: 34px; border-radius: 8px; }
+  .logo span b { color: var(--cyan); }
+  nav a { color: var(--dim); text-decoration: none; margin-left: 22px; font-size: 14px; transition: color .2s; }
+  nav a:hover { color: var(--cyan); }
+
+  .hero { padding: 70px 0 50px; display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: center; }
+  .hero h1 { font-size: 52px; letter-spacing: 1px; line-height: 1.15; }
+  .hero h1 .d2 { background: linear-gradient(90deg, var(--cyan), var(--purple)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .tagline { margin: 18px 0 8px; font-size: 20px; color: var(--text); }
+  .sub { color: var(--dim); font-size: 15px; max-width: 560px; }
+  .cta { margin-top: 28px; display: flex; gap: 14px; flex-wrap: wrap; }
+  .btn {
+    display: inline-block; padding: 12px 26px; border-radius: 10px;
+    font-weight: 600; text-decoration: none; font-size: 15px; transition: transform .15s, box-shadow .2s;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary { background: linear-gradient(90deg, #00f0ff33, #7a5cff33); border: 1px solid var(--cyan); color: var(--cyan); box-shadow: 0 0 24px rgba(0,240,255,.15); }
+  .btn-primary:hover { box-shadow: 0 0 36px rgba(0,240,255,.35); }
+  .btn-ghost { border: 1px solid #333a5e; color: var(--text); }
+  .hero-icon { width: 200px; height: 200px; border-radius: 44px; box-shadow: 0 0 60px rgba(0,240,255,.25), 0 0 120px rgba(122,92,255,.15); }
+
+  .shot { margin: 30px 0 10px; border-radius: 14px; border: 1px solid #262b52; box-shadow: 0 20px 60px rgba(0,0,0,.5); width: 100%; display: block; }
+  .caption { text-align: center; color: var(--dim); font-size: 13px; margin-bottom: 40px; }
+
+  h2 { font-size: 30px; margin: 60px 0 10px; }
+  h2::before { content: "/* "; color: var(--pink); }
+  h2::after { content: " */"; color: var(--pink); }
+  .lead { color: var(--dim); margin-bottom: 30px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+  .card {
+    background: var(--card); border: 1px solid #262b52; border-radius: 14px; padding: 22px;
+    transition: border-color .2s, transform .2s;
+  }
+  .card:hover { border-color: var(--cyan); transform: translateY(-3px); }
+  .card h3 { font-size: 16px; margin-bottom: 8px; color: var(--cyan); }
+  .card p { font-size: 14px; color: var(--dim); }
+  .card .em { color: var(--pink); }
+
+  table.keys { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.keys td { padding: 9px 14px; border-bottom: 1px solid #22274a; }
+  table.keys td:first-child { color: var(--text); width: 50%; }
+  kbd {
+    background: #22274a; border: 1px solid #333a5e; border-bottom-width: 2px;
+    border-radius: 6px; padding: 2px 8px; font-family: Menlo, monospace; font-size: 12px; color: var(--cyan);
+  }
+
+  .install {
+    background: #12142c; border: 1px solid #262b52; border-radius: 12px;
+    padding: 18px 22px; font-family: Menlo, monospace; font-size: 14px; margin-top: 12px;
+    white-space: pre; overflow-x: auto;
+  }
+  .install .c { color: var(--dim); }
+  .install .p { color: var(--pink); }
+
+  footer { margin-top: 80px; padding: 30px 0 46px; border-top: 1px solid #22274a; color: var(--dim); font-size: 13px; }
+  footer .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  footer a { color: var(--cyan); text-decoration: none; }
+
+  @media (max-width: 800px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-icon { width: 140px; height: 140px; }
+    .hero h1 { font-size: 40px; }
+  }
+</style>
+</head>
+<body>
+<div class="glow-bg"></div>
+
+<nav>
+  <div class="wrap">
+    <div class="logo"><img src="icon.png" alt="d2note"> <span>d2<b>note</b></span></div>
+    <div>
+      <a href="#features">功能</a>
+      <a href="#keys">快捷键</a>
+      <a href="#build">构建</a>
+      <a href="https://github.com/asdshuaishuai/d2note/releases">下载</a>
+      <a href="https://github.com/asdshuaishuai/d2note">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <section class="hero">
+    <div>
+      <h1><span class="d2">d2note</span> 本地智能笔记编辑器</h1>
+      <p class="tagline">🐰 为 macOS 而生的轻量代码 / 笔记编辑器</p>
+      <p class="sub">Swift + AppKit 原生编写，零第三方依赖。语法高亮、本地翻译、习惯推荐、自动保存草稿 —— 你的内容永远只留在你的 Mac 上。</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="https://github.com/asdshuaishuai/d2note/releases">⬇ 下载 v0.1（Apple Silicon）</a>
+        <a class="btn btn-ghost" href="https://github.com/asdshuaishuai/d2note">查看源码</a>
+      </div>
+    </div>
+    <img class="hero-icon" src="icon.png" alt="d2note 图标">
+  </section>
+
+  <img class="shot" src="screenshot.png" alt="d2note 主界面">
+  <p class="caption">多标签 · 行号 · 语法高亮 · 中文右键菜单 · 底部状态栏一键翻译</p>
+
+  <h2>功能特性</h2>
+  <p class="lead">向 Notepad++ 致敬，但长在了 macOS 上。</p>
+  <div class="grid">
+    <div class="card"><h3>多标签页</h3><p>拖拽排序、双击新建、<span class="em">⌘1-9</span> 快速切换、未保存圆点标记，标签上还有文件类型彩色徽章。</p></div>
+    <div class="card"><h3>20 种语言语法高亮</h3><p>手写 UTF-16 tokenizer：Swift、Python、JS/TS、C/C++、Go、Rust、JSON、Markdown、SQL…打开文件自动识别语言。</p></div>
+    <div class="card"><h3>本地翻译 <span class="em">macOS 26+</span></h3><p>基于系统 Translation 框架完全离线翻译，自动识别源语言，结果一键替换。内容不出你的电脑。</p></div>
+    <div class="card"><h3>自动保存草稿</h3><p>未命名标签、未保存修改、光标位置全部持久化，重启后原样恢复。文件被删了？草稿还能救回来。</p></div>
+    <div class="card"><h3>智能推荐 <span class="em">默认关闭</span></h3><p>NLTokenizer 本机分词学习你的用词习惯，输入时幽灵文本补全，Tab 接受。隐私优先，数据只在本地。</p></div>
+    <div class="card"><h3>快速格式化</h3><p>JSON 格式化/压缩、XML/HTML 美化/压缩、SQL 美化、排序/倒序/去重/删空行，右键一键直达。</p></div>
+    <div class="card"><h3>编辑辅助</h3><p>括号引号自动补全与跳过、括号配对高亮、回车智能缩进、⌘/ 切换注释、查找替换（支持正则）。</p></div>
+    <div class="card"><h3>深度系统集成</h3><p>Dock 菜单与徽标、系统服务「用 d2note 打开所选文本」、标题栏代理图标、拖拽打开、中文右键菜单。</p></div>
+    <div class="card"><h3>深浅双主题</h3><p>One Dark 风深色主题与 Xcode 风浅色主题一键切换，字号 ⌘= / ⌘- 随手调。</p></div>
+  </div>
+
+  <h2 id="keys">快捷键</h2>
+  <p class="lead">效率党的最爱。</p>
+  <table class="keys">
+    <tr><td>新建 / 打开 / 保存 / 关闭标签</td><td><kbd>⌘N</kbd> <kbd>⌘O</kbd> <kbd>⌘S</kbd> <kbd>⌘W</kbd></td></tr>
+    <tr><td>查找 / 替换</td><td><kbd>⌘F</kbd> <kbd>⌥⌘F</kbd></td></tr>
+    <tr><td>跳转到行</td><td><kbd>⌘L</kbd></td></tr>
+    <tr><td>切换注释</td><td><kbd>⌘/</kbd></td></tr>
+    <tr><td>翻译全文 / 所选</td><td><kbd>⌥⌘T</kbd></td></tr>
+    <tr><td>格式化文档 / 格式化 JSON</td><td><kbd>⌥⇧F</kbd> <kbd>⌘⇧J</kbd></td></tr>
+    <tr><td>自动换行 / 行号</td><td><kbd>⌥⌘W</kbd> <kbd>⌥⌘L</kbd></td></tr>
+    <tr><td>切换标签</td><td><kbd>⌘⇧[</kbd> <kbd>⌘⇧]</kbd> <kbd>⌘1-9</kbd></td></tr>
+    <tr><td>字号</td><td><kbd>⌘=</kbd> <kbd>⌘-</kbd> <kbd>⌘0</kbd></td></tr>
+  </table>
+
+  <h2 id="build">从源码构建</h2>
+  <p class="lead">只要装了 Xcode，一条命令。</p>
+  <div class="install"><span class="c"># 克隆并打包（Apple Silicon / macOS 13+）</span>
+<span class="p">git</span> clone https://github.com/asdshuaishuai/d2note.git
+<span class="p">cd</span> d2note
+./make_app.sh
+<span class="p">open</span> build/d2note.app</div>
+
+  <footer>
+    <div class="wrap">
+      <div>d2note · 用 🐰 和 Swift 写成 · MIT License</div>
+      <div><a href="https://github.com/asdshuaishuai/d2note">GitHub</a> · <a href="https://github.com/asdshuaishuai/d2note/releases">Releases</a> · <a href="https://github.com/asdshuaishuai/d2note/issues">Issues</a></div>
+    </div>
+  </footer>
+</div>
+</body>
+</html>
