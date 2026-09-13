@@ -1,6 +1,6 @@
 # d2note
 
-一个用 **Swift + AppKit** 原生编写的 macOS 轻量笔记/代码编辑器（🐰 d2note），向 Notepad++ 致敬。
+一个用 **Swift + AppKit** 原生编写的 macOS 轻量笔记/代码编辑器（🐰 d2note），向国产开源的 Notepad-- 致敬。
 单窗口多标签，打开即用，无任何第三方依赖，深度集成系统能力与本地智能。
 
 ![SwiftPad](screenshots/app.png)

@@ -87,7 +87,7 @@ print(numbers, pattern)
     static let markdownSample = #"""
     # d2note 使用笔记
 
-    一个用 **Swift + AppKit** 写的轻量文本编辑器，向 Notepad++ 致敬。
+    一个用 **Swift + AppKit** 写的轻量文本编辑器，向国产开源的 Notepad-- 致敬。
 
     ## 快捷键速查
 
