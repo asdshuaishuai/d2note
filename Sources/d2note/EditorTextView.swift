@@ -1,6 +1,6 @@
 import AppKit
 
-final class EditorTextView: NSTextView {
+final class EditorTextView: NSTextView, NSLayoutManagerDelegate {
 
     var onTextChanged: (() -> Void)?
     var onEscape: (() -> Void)?
@@ -68,14 +68,48 @@ final class EditorTextView: NSTextView {
         smartInsertDeleteEnabled = false
         allowsDocumentBackgroundColorChange = true
         layoutManager?.allowsNonContiguousLayout = false
+        layoutManager?.delegate = self
         isVerticallyResizable = true
         isHorizontallyResizable = true
         textContainerInset = NSSize(width: 6, height: 8)
         minSize = NSSize.zero
         maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
-        isVerticallyResizable = true
-        textContainer?.heightTracksTextView = true
+        // 容器不追踪 textView —— 布局完成后由 updateFrameToContent 把
+        // textView frame 同步到内容尺寸。heightTracksTextView=true 会把
+        // 滚动范围锁死在初始高度（超长内容滚不下去）。
+        textContainer?.heightTracksTextView = false
+        textContainer?.size = NSSize(width: 0, height: 0)
         registerForDraggedTypes([.fileURL])
+    }
+
+    // MARK: - Content-driven frame growth
+
+    /// 把 textView 的高度（与关闭换行时的宽度）同步到排版内容尺寸。
+    func updateFrameToContent() {
+        guard let lm = layoutManager, let tc = textContainer, window != nil else { return }
+        let used = lm.usedRect(for: tc)
+        var size = NSSize(width: used.width + textContainerInset.width * 2,
+                          height: used.height + textContainerInset.height * 2)
+        if let clip = enclosingScrollView?.contentView {
+            size.width = max(size.width, clip.bounds.width)
+            size.height = max(size.height, clip.bounds.height)
+        }
+        if abs(frame.width - size.width) > 0.5 || abs(frame.height - size.height) > 0.5 {
+            setFrameSize(size)
+        }
+    }
+
+    // MARK: - Word wrap
+
+    func setWordWrap(_ on: Bool) {
+        textContainer?.widthTracksTextView = on
+        if on {
+            textContainer?.size = NSSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
+        } else {
+            textContainer?.size = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        }
+        enclosingScrollView?.hasHorizontalScroller = !on
+        updateFrameToContent()
     }
 
     func applyTheme(_ theme: Theme, font: NSFont) {
@@ -91,18 +125,6 @@ final class EditorTextView: NSTextView {
     // MARK: - Word wrap
 
     static let noRange = NSRange(location: NSNotFound, length: 0)
-
-    func setWordWrap(_ on: Bool) {
-        textContainer?.widthTracksTextView = on
-        if on {
-            textContainer?.size = NSSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
-        } else {
-            textContainer?.size = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
-        }
-        enclosingScrollView?.hasHorizontalScroller = !on
-        needsLayout = true
-        layout()
-    }
 
     // MARK: - Text insertion with auto-pairs
 
@@ -534,6 +556,7 @@ final class EditorTextView: NSTextView {
 
     override func didChangeText() {
         super.didChangeText()
+        updateFrameToContent()
         onTextChanged?()
     }
 

@@ -74,6 +74,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, TabB
 
         NSApp.servicesProvider = self
 
+
         if ProcessInfo.processInfo.environment["SP_TEST_PALETTE"] == "1" {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
                 self?.togglePalette(nil)
