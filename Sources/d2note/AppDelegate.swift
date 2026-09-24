@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, TabB
 
     // MARK: - State
     private(set) var documents: [EditorDocument] = []
+    private var pendingOpenURLs: [URL] = []
     private var activeIndex = 0
     private var untitledCounter = 1
     private var retokenizeTimer: Timer?
@@ -57,6 +58,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, TabB
         openInitialContent()
         applyTheme()
         window.collectionBehavior = [.fullScreenPrimary, .fullScreenAuxiliary]
+
+        // 回放启动前收到的打开请求
+        if !pendingOpenURLs.isEmpty {
+            let queued = pendingOpenURLs
+            pendingOpenURLs = []
+            openURLs(queued)
+        }
 
         // A saved frame may point to a disconnected display — pull it back on-screen.
         let frame = window.frame
@@ -141,6 +149,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, TabB
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool { true }
 
     func application(_ application: NSApplication, open urls: [URL]) {
+        // 通过 Finder 双击/“打开方式”启动时，该 Apple Event 会先于
+        // applicationDidFinishLaunching（窗口尚未创建）到达 —— 入队，
+        // 等启动完成后再回放，否则 refreshChrome 解包 nil window 崩溃。
+        guard window != nil else {
+            pendingOpenURLs.append(contentsOf: urls)
+            return
+        }
         openURLs(urls)
     }
 
@@ -782,6 +797,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, TabB
     }
 
     private func refreshChrome() {
+        guard window != nil, tabBar != nil else { return }
         tabBar.needsDisplay = true
         if let doc = activeDoc {
             window.title = "\(doc.displayName) — d2note"
