@@ -25,6 +25,12 @@ final class EditorTextView: NSTextView, NSLayoutManagerDelegate {
     ]
     private static let quotes: Set<unichar> = [0x22, 0x27, 0x60] // " ' `
 
+    /// 输入开符号时用于包裹选区的闭符号
+    static func pairCloser(for open: unichar) -> unichar? {
+        if let c = openToClose[open] { return c }
+        return quotes.contains(open) ? open : nil
+    }
+
     // Overlay bookkeeping (temporary attributes, never stored in text)
     private var bracketRanges: [NSRange] = []
     private var currentLineRange: NSRange? = nil
@@ -133,8 +139,26 @@ final class EditorTextView: NSTextView, NSLayoutManagerDelegate {
               let str = insertString as? String,
               let first = str.utf16.first, str.utf16.count == 1,
               first < 0x80,
-              replacementRange == EditorTextView.noRange,
-              selectedRange().length == 0 else {
+              replacementRange == EditorTextView.noRange else {
+            super.insertText(insertString, replacementRange: replacementRange)
+            return
+        }
+
+        // 有选区时输入开括号/引号：包裹选区而不是替换
+        let sel = selectedRange()
+        if sel.length > 0,
+           let closer = EditorTextView.pairCloser(for: first) {
+            let s = string as NSString
+            let inner = s.substring(with: NSRange(location: min(sel.location, s.length),
+                                                  length: min(sel.length, s.length - min(sel.location, s.length))))
+            if let closerScalar = UnicodeScalar(closer) {
+                super.insertText("\(str)\(inner)\(Character(closerScalar))", replacementRange: sel)
+                setSelectedRange(NSRange(location: sel.location + 1, length: sel.length))
+                return
+            }
+        }
+
+        guard selectedRange().length == 0 else {
             super.insertText(insertString, replacementRange: replacementRange)
             return
         }

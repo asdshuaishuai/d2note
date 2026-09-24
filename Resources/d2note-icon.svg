@@ -2,16 +2,29 @@
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0A0C1E"/>
-      <stop offset="55%" stop-color="#10122E"/>
-      <stop offset="100%" stop-color="#1A0F33"/>
+      <stop offset="0%" stop-color="#0B0E26"/>
+      <stop offset="55%" stop-color="#111534"/>
+      <stop offset="100%" stop-color="#1B1240"/>
     </linearGradient>
     <linearGradient id="neon" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00F0FF"/>
-      <stop offset="100%" stop-color="#7A5CFF"/>
+      <stop offset="0%" stop-color="#22F7FF"/>
+      <stop offset="55%" stop-color="#4EA9FF"/>
+      <stop offset="100%" stop-color="#8A5CFF"/>
     </linearGradient>
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="14" result="b"/>
+    <radialGradient id="halo" cx="50%" cy="42%" r="55%">
+      <stop offset="0%" stop-color="#22F7FF" stop-opacity="0.16"/>
+      <stop offset="60%" stop-color="#22F7FF" stop-opacity="0.05"/>
+      <stop offset="100%" stop-color="#22F7FF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="12" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softglow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="6" result="b"/>
       <feMerge>
         <feMergeNode in="b"/>
         <feMergeNode in="SourceGraphic"/>
@@ -19,59 +32,91 @@
     </filter>
   </defs>
 
-  <!-- dark rounded background with neon rim -->
-  <rect x="64" y="64" width="896" height="896" rx="212" fill="url(#bg)"/>
-  <rect x="76" y="76" width="872" height="872" rx="200" fill="none"
-        stroke="url(#neon)" stroke-width="3" opacity="0.55"/>
+  <!-- background -->
+  <rect x="64" y="64" width="896" height="896" rx="216" fill="url(#bg)"/>
 
-  <!-- faint circuit traces -->
-  <g stroke="#00F0FF" stroke-width="4" fill="none" opacity="0.28" stroke-linecap="round">
-    <path d="M 120 830 H 260 L 320 770 H 420"/>
-    <path d="M 904 830 H 800 L 740 770 H 660"/>
-    <circle cx="430" cy="770" r="9"/>
-    <circle cx="650" cy="770" r="9"/>
-    <path d="M 150 150 V 230 L 210 290"/>
-    <path d="M 874 150 V 230 L 814 290"/>
-    <circle cx="214" cy="296" r="8"/>
-    <circle cx="810" cy="296" r="8"/>
+  <!-- faint grid -->
+  <g stroke="#4EA9FF" stroke-width="2" opacity="0.05">
+    <path d="M 192 64 V 960 M 320 64 V 960 M 448 64 V 960 M 576 64 V 960 M 704 64 V 960 M 832 64 V 960"/>
+    <path d="M 64 192 H 960 M 64 320 H 960 M 64 448 H 960 M 64 576 H 960 M 64 704 H 960 M 64 832 H 960"/>
   </g>
 
-  <!-- ears (neon outline) -->
-  <g filter="url(#glow)" stroke="url(#neon)" stroke-width="14" fill="none" stroke-linecap="round">
-    <path d="M 400 560 C 360 420 366 300 428 236 C 470 194 506 250 496 356 C 490 424 470 500 452 552"/>
-    <path d="M 624 560 C 664 420 658 300 596 236 C 554 194 518 250 528 356 C 534 424 554 500 572 552"/>
+  <!-- halo behind rabbit -->
+  <circle cx="512" cy="580" r="330" fill="url(#halo)"/>
+
+  <!-- corner circuit traces -->
+  <g stroke="#22F7FF" stroke-width="4" fill="none" opacity="0.30" stroke-linecap="round">
+    <path d="M 118 856 H 240 L 296 800 H 386"/>
+    <path d="M 906 856 H 784 L 728 800 H 640"/>
+    <path d="M 118 132 V 210 L 170 262"/>
+    <path d="M 906 132 V 210 L 854 262"/>
+  </g>
+  <g fill="#22F7FF" opacity="0.45">
+    <circle cx="392" cy="800" r="8"/>
+    <circle cx="634" cy="800" r="8"/>
+    <circle cx="174" cy="268" r="7"/>
+    <circle cx="850" cy="268" r="7"/>
   </g>
 
-  <!-- head (neon outline) -->
-  <g filter="url(#glow)" stroke="url(#neon)" stroke-width="14" fill="none" stroke-linecap="round">
-    <path d="M 350 610
-             C 350 730 420 806 512 806
-             C 604 806 674 730 674 610
-             C 674 520 610 470 512 470
-             C 414 470 350 520 350 610 Z"/>
+  <!-- ears: outer neon stroke over dark fill so head occludes cleanly -->
+  <g filter="url(#glow)">
+    <ellipse cx="424" cy="296" rx="66" ry="158" transform="rotate(-9 424 296)"
+             fill="#0D1030" stroke="url(#neon)" stroke-width="16"/>
+    <ellipse cx="600" cy="296" rx="66" ry="158" transform="rotate(9 600 296)"
+             fill="#0D1030" stroke="url(#neon)" stroke-width="16"/>
+  </g>
+  <!-- inner ear glow fill -->
+  <g filter="url(#softglow)">
+    <ellipse cx="424" cy="312" rx="34" ry="104" transform="rotate(-9 424 312)"
+             fill="#FF2D95" opacity="0.38"/>
+    <ellipse cx="600" cy="312" rx="34" ry="104" transform="rotate(9 600 312)"
+             fill="#FF2D95" opacity="0.38"/>
   </g>
 
-  <!-- eyes: cyber slashes -->
-  <g filter="url(#glow)" stroke="#00F0FF" stroke-width="16" stroke-linecap="round">
-    <line x1="418" y1="618" x2="474" y2="606"/>
-    <line x1="550" y1="606" x2="606" y2="618"/>
+  <!-- head: opaque fill occludes ear bottoms -->
+  <circle cx="512" cy="618" r="226" fill="#0E1132" filter="url(#glow)"/>
+  <circle cx="512" cy="618" r="226" fill="none" stroke="url(#neon)" stroke-width="16" filter="url(#glow)"/>
+
+  <!-- cheeks -->
+  <circle cx="392" cy="676" r="30" fill="#FF2D95" opacity="0.20"/>
+  <circle cx="632" cy="676" r="30" fill="#FF2D95" opacity="0.20"/>
+
+  <!-- eyes: bright neon bars with white core -->
+  <g filter="url(#glow)">
+    <rect x="404" y="592" width="72" height="24" rx="12" fill="#22F7FF"/>
+    <rect x="548" y="592" width="72" height="24" rx="12" fill="#22F7FF"/>
   </g>
+  <rect x="424" y="600" width="32" height="8" rx="4" fill="#FFFFFF" opacity="0.95"/>
+  <rect x="568" y="600" width="32" height="8" rx="4" fill="#FFFFFF" opacity="0.95"/>
 
   <!-- nose + mouth -->
-  <g filter="url(#glow)" stroke="#FF2D95" stroke-width="12" fill="none" stroke-linecap="round">
-    <path d="M 494 664 Q 512 680 530 664"/>
-    <path d="M 512 682 L 512 696 M 512 696 Q 492 712 480 700 M 512 696 Q 532 712 544 700"/>
+  <path d="M 492 664 Q 512 650 532 664 Q 524 686 512 686 Q 500 686 492 664 Z"
+        fill="#FF2D95" filter="url(#softglow)"/>
+  <g stroke="#FF2D95" stroke-width="10" fill="none" stroke-linecap="round" filter="url(#softglow)">
+    <path d="M 512 686 L 512 698"/>
+    <path d="M 512 698 Q 494 712 480 702"/>
+    <path d="M 512 698 Q 530 712 544 702"/>
   </g>
 
   <!-- whisker data-lines -->
-  <g stroke="#00F0FF" stroke-width="7" opacity="0.85" stroke-linecap="round">
-    <line x1="368" y1="660" x2="300" y2="648"/>
-    <line x1="368" y1="688" x2="302" y2="696"/>
-    <line x1="656" y1="660" x2="724" y2="648"/>
-    <line x1="656" y1="688" x2="722" y2="696"/>
+  <g stroke="#22F7FF" stroke-width="7" opacity="0.85" stroke-linecap="round">
+    <line x1="366" y1="646" x2="296" y2="634"/>
+    <line x1="366" y1="676" x2="298" y2="686"/>
+    <line x1="658" y1="646" x2="728" y2="634"/>
+    <line x1="658" y1="676" x2="726" y2="686"/>
   </g>
-  <g fill="#FF2D95">
-    <circle cx="296" cy="648" r="9"/>
-    <circle cx="728" cy="648" r="9"/>
+  <g fill="#FF2D95" filter="url(#softglow)">
+    <circle cx="292" cy="634" r="9"/>
+    <circle cx="732" cy="634" r="9"/>
+  </g>
+
+  <!-- sparkles -->
+  <g stroke="#22F7FF" stroke-width="6" stroke-linecap="round" opacity="0.75">
+    <path d="M 236 420 v 36 M 218 438 h 36"/>
+    <path d="M 792 388 v 30 M 777 403 h 30"/>
+  </g>
+  <g fill="#FF2D95" opacity="0.8">
+    <circle cx="286" cy="180" r="6"/>
+    <circle cx="748" cy="156" r="6"/>
   </g>
 </svg>

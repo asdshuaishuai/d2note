@@ -18,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, TabB
     // MARK: - State
     private(set) var documents: [EditorDocument] = []
     private var pendingOpenURLs: [URL] = []
+    private var lastClosedTabs: [(url: URL?, title: String?, text: String, caret: Int, lang: SourceLanguage, wasDirty: Bool)] = []
     private var activeIndex = 0
     private var untitledCounter = 1
     private var retokenizeTimer: Timer?
@@ -326,6 +327,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, TabB
             self?.retokenize(doc)
         }
         statusBar.onTranslate = { [weak self] in self?.translateAction(nil) }
+        statusBar.onPositionClick = { [weak self] in self?.goToLine(nil) }
 
         findBar = FindBarView()
         findBar.onFindNext = { [weak self] in self?.findNext() }
@@ -409,6 +411,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, TabB
             c("另存为…", "⌘⇧S", { self.saveDocumentAs(nil) }),
             c("保存全部", "⌥⌘S", { self.saveAllDocuments(nil) }),
             c("关闭标签", "⌘W", { self.closeTabAction(nil) }),
+            c("重新打开关闭的标签", "⌘⇧T", { self.reopenClosedTab(nil) }),
             c("查找…", "⌘F", { self.startFind(nil) }),
             c("替换…", "⌥⌘F", { self.startReplace(nil) }),
             c("跳转到行…", "⌘L", { self.goToLine(nil) }),
@@ -504,6 +507,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, TabB
             MenuItemDef("保存全部", #selector(saveAllDocuments(_:)), "s", [.command, .option]),
             MenuItemDef("-"),
             MenuItemDef("关闭标签", #selector(closeTabAction(_:)), "w", [.command]),
+            MenuItemDef("重新打开关闭的标签", #selector(reopenClosedTab(_:)), "t", [.command, .shift]),
         ])
 
         // Edit
@@ -961,6 +965,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, TabB
     }
 
     private func removeTab(_ index: Int) {
+        if documents.indices.contains(index) {
+            let doc = documents[index]
+            lastClosedTabs.append((doc.fileURL, doc.displayTitle != "未命名" ? doc.displayTitle : nil,
+                                   doc.textView.string, doc.textView.selectedRange().location,
+                                   doc.language, doc.isDirty))
+            if lastClosedTabs.count > 10 { lastClosedTabs.removeFirst() }
+        }
         documents.remove(at: index)
         saveSessionNow()
         if documents.isEmpty {
@@ -1075,6 +1086,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, TabB
 
     @objc func closeTabAction(_ sender: Any?) {
         if activeDoc != nil { tabBarDidClose(activeIndex) }
+    }
+
+    @objc func reopenClosedTab(_ sender: Any?) {
+        guard let closed = lastClosedTabs.popLast() else { NSSound.beep(); return }
+        let doc = makeDocument(content: closed.text, url: closed.url)
+        if closed.url == nil {
+            doc.displayTitle = closed.title
+            doc.language = closed.lang
+            doc.textView.language = closed.lang
+        }
+        doc.isDirty = closed.wasDirty
+        let insertAt = min(activeIndex + 1, documents.count)
+        documents.insert(doc, at: insertAt)
+        switchToTab(insertAt)
+        let len = (closed.text as NSString).length
+        doc.textView.setSelectedRange(NSRange(location: min(closed.caret, len), length: 0))
+        doc.textView.scrollRangeToVisible(doc.textView.selectedRange())
     }
 
     // MARK: - Window close with unsaved check
@@ -1726,6 +1754,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, TabB
             return activeDoc != nil
         case #selector(learnCurrentDocument(_:)):
             return activeDoc != nil && Prefs.smartSuggest
+        case #selector(reopenClosedTab(_:)):
+            return !lastClosedTabs.isEmpty
         case #selector(translateAction(_:)):
             if #available(macOS 26.0, *) { return activeDoc != nil }
             return false

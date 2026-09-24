@@ -21,6 +21,7 @@ final class StatusBarView: NSView {
 
     var onLanguageChanged: ((SourceLanguage) -> Void)?
     var onTranslate: (() -> Void)?
+    var onPositionClick: (() -> Void)?
 
     var theme: Theme = .current { didSet { needsDisplay = true } }
 
@@ -46,6 +47,11 @@ final class StatusBarView: NSView {
         translateButton.target = self
         translateButton.action = #selector(translateTapped)
         addSubview(translateButton)
+
+        // 点击 "Ln x, Col y" 打开跳转到行
+        let posClick = NSClickGestureRecognizer(target: self, action: #selector(positionClicked))
+        positionLabel.addGestureRecognizer(posClick)
+        positionLabel.toolTip = "点击跳转到指定行"
 
         applyTheme()
     }
@@ -74,6 +80,7 @@ final class StatusBarView: NSView {
     }
 
     @objc private func translateTapped() { onTranslate?() }
+    @objc private func positionClicked() { onPositionClick?() }
 
     func setLanguage(_ lang: SourceLanguage) {
         languagePopup.selectItem(withTitle: lang.displayName)
